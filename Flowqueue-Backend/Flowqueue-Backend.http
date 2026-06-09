@@ -1,6 +1,15 @@
-@Flowqueue_Backend_HostAddress = http://localhost:5250
+@Flowqueue_Backend_HostAddress = http://localhost:5059
 
-GET {{Flowqueue_Backend_HostAddress}}/weatherforecast/
+GET {{Flowqueue_Backend_HostAddress}}/api/v1/institutions
 Accept: application/json
 
 ###
+
+POST {{Flowqueue_Backend_HostAddress}}/api/v1/institutions
+Content-Type: application/json
+
+{
+  "name": "RENIEC",
+  "description": "Registro Nacional de Identificación y Estado Civil",
+  "type": "Documentos"
+}
