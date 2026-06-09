@@ -73,81 +73,6 @@ namespace Flowqueue_Backend.shared.Infrastructure.Persistence.EFC.Migrations
                     b.ToTable("users");
                 });
 
-
-            modelBuilder.Entity("Flowqueue_Backend.Notifications.Domain.Model.Aggregates.Notification", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    b.Property<DateTimeOffset?>("ArchivedAt")
-                        .HasColumnType("datetime")
-                        .HasColumnName("archived_at");
-
-                    b.Property<DateTimeOffset?>("CreatedAt")
-                        .HasColumnType("datetime")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("varchar(300)")
-                        .HasColumnName("message");
-
-                    b.Property<DateTimeOffset?>("ReadAt")
-                        .HasColumnType("datetime")
-                        .HasColumnName("read_at");
-
-                    b.Property<DateTimeOffset>("SentAt")
-                        .HasColumnType("datetime")
-                        .HasColumnName("sent_at");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("status");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("varchar(120)")
-                        .HasColumnName("title");
-
-                    b.Property<int?>("TurnId")
-                        .HasColumnType("int")
-                        .HasColumnName("turn_id");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("varchar(40)")
-                        .HasColumnName("type");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime")
-                        .HasColumnName("updated_at");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id")
-                        .HasName("p_k_notifications");
-
-                    b.HasIndex("Status")
-                        .HasDatabaseName("i_x_notifications_status");
-
-                    b.HasIndex("TurnId")
-                        .HasDatabaseName("i_x_notifications_turn_id");
-
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("i_x_notifications_user_id");
-
-                    b.ToTable("notifications");
-                });
-
             modelBuilder.Entity("Flowqueue_Backend.Institutions.Domain.Model.Aggregates.BranchOffice", b =>
                 {
                     b.Property<int>("Id")
@@ -289,6 +214,80 @@ namespace Flowqueue_Backend.shared.Infrastructure.Persistence.EFC.Migrations
                     b.ToTable("services");
                 });
 
+            modelBuilder.Entity("Flowqueue_Backend.Notifications.Domain.Model.Aggregates.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("ArchivedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("archived_at");
+
+                    b.Property<DateTimeOffset?>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)")
+                        .HasColumnName("message");
+
+                    b.Property<DateTimeOffset?>("ReadAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("read_at");
+
+                    b.Property<DateTimeOffset>("SentAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("sent_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("varchar(120)")
+                        .HasColumnName("title");
+
+                    b.Property<int?>("TurnId")
+                        .HasColumnType("int")
+                        .HasColumnName("turn_id");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)")
+                        .HasColumnName("type");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("p_k_notifications");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("i_x_notifications_status");
+
+                    b.HasIndex("TurnId")
+                        .HasDatabaseName("i_x_notifications_turn_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("i_x_notifications_user_id");
+
+                    b.ToTable("notifications");
+                });
+
             modelBuilder.Entity("Flowqueue_Backend.Queueing.Domain.Model.Aggregates.Turn", b =>
                 {
                     b.Property<int>("Id")
@@ -377,23 +376,6 @@ namespace Flowqueue_Backend.shared.Infrastructure.Persistence.EFC.Migrations
                     b.ToTable("turns");
                 });
 
-
-            modelBuilder.Entity("Flowqueue_Backend.Notifications.Domain.Model.Aggregates.Notification", b =>
-                {
-                    b.HasOne("Flowqueue_Backend.Queueing.Domain.Model.Aggregates.Turn", null)
-                        .WithMany()
-                        .HasForeignKey("TurnId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("f_k_notifications_turns_turn_id");
-
-                    b.HasOne("Flowqueue_Backend.IAM.Domain.Model.Aggregates.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("f_k_notifications_users_user_id");
-                });
-
             modelBuilder.Entity("Flowqueue_Backend.Institutions.Domain.Model.Aggregates.BranchOffice", b =>
                 {
                     b.HasOne("Flowqueue_Backend.Institutions.Domain.Model.Aggregates.Institution", null)
@@ -412,6 +394,22 @@ namespace Flowqueue_Backend.shared.Infrastructure.Persistence.EFC.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("f_k_services_branch_offices_branch_office_id");
+                });
+
+            modelBuilder.Entity("Flowqueue_Backend.Notifications.Domain.Model.Aggregates.Notification", b =>
+                {
+                    b.HasOne("Flowqueue_Backend.Queueing.Domain.Model.Aggregates.Turn", null)
+                        .WithMany()
+                        .HasForeignKey("TurnId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("f_k_notifications__turns_turn_id");
+
+                    b.HasOne("Flowqueue_Backend.IAM.Domain.Model.Aggregates.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("f_k_notifications_users_user_id");
                 });
 
             modelBuilder.Entity("Flowqueue_Backend.Queueing.Domain.Model.Aggregates.Turn", b =>

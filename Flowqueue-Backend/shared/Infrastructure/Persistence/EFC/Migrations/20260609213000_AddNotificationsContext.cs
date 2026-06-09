@@ -34,7 +34,7 @@ namespace Flowqueue_Backend.shared.Infrastructure.Persistence.EFC.Migrations
                 {
                     table.PrimaryKey("p_k_notifications", x => x.id);
                     table.ForeignKey(
-                        name: "f_k_notifications_turns_turn_id",
+                        name: "f_k_notifications__turns_turn_id",
                         column: x => x.turn_id,
                         principalTable: "turns",
                         principalColumn: "id",
