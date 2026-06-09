@@ -5,6 +5,7 @@ namespace Flowqueue_Backend.IAM.Domain.Repositories;
 
 public interface IUserRepository : IBaseRepository<User>
 {
+    Task AddAsync(User user, CancellationToken cancellationToken = default);
     Task<User?> FindByEmailAsync(string email, CancellationToken cancellationToken = default);
     Task<IEnumerable<User>> FindByFiltersAsync(string? role, CancellationToken cancellationToken = default);
 }

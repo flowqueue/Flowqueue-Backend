@@ -8,6 +8,8 @@ namespace Flowqueue_Backend.IAM.Infrastructure.Persistence.EFC.Repositories;
 
 public class UserRepository(AppDbContext context) : BaseRepository<User>(context), IUserRepository
 {
+    public async Task AddAsync(User user, CancellationToken cancellationToken = default) =>
+        await Context.Set<User>().AddAsync(user, cancellationToken);
     public async Task<User?> FindByEmailAsync(
         string email,
         CancellationToken cancellationToken = default)
