@@ -1,3 +1,5 @@
+using Flowqueue_Backend.IAM.Domain.Model.Aggregates;
+using Flowqueue_Backend.IAM.Domain.Model.ValueObjects;
 using Flowqueue_Backend.Institutions.Domain.Model.Aggregates;
 using Flowqueue_Backend.Institutions.Domain.Model.ValueObjects;
 using Flowqueue_Backend.Queueing.Domain.Model.Aggregates;
@@ -10,6 +12,7 @@ namespace Flowqueue_Backend.shared.Infrastructure.Persistence.EFC.Configuration;
 
 public class AppDbContext(DbContextOptions options) : DbContext(options)
 {
+    public DbSet<User> Users => Set<User>();
     public DbSet<Institution> Institutions => Set<Institution>();
     public DbSet<BranchOffice> BranchOffices => Set<BranchOffice>();
     public DbSet<Service> Services => Set<Service>();
@@ -25,9 +28,28 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
     {
         base.OnModelCreating(builder);
 
+        ConfigureIamContext(builder);
         ConfigureInstitutionsContext(builder);
         ConfigureQueueingContext(builder);
         builder.UseSnakeCaseNamingConvention();
+    }
+
+    private static void ConfigureIamContext(ModelBuilder builder)
+    {
+        builder.Entity<User>(entity =>
+        {
+            entity.HasKey(user => user.Id);
+            entity.Property(user => user.Id).ValueGeneratedOnAdd();
+            entity.Property(user => user.FullName).IsRequired().HasMaxLength(100);
+            entity.Property(user => user.Email).IsRequired().HasMaxLength(120);
+            entity.Property(user => user.PasswordHash).IsRequired().HasMaxLength(256);
+            entity.Property(user => user.DocumentNumber).HasMaxLength(20);
+            entity.Property(user => user.Role)
+                .HasConversion(role => role.Value, value => new UserRole(value))
+                .IsRequired()
+                .HasMaxLength(30);
+            entity.HasIndex(user => user.Email).IsUnique();
+        });
     }
 
     private static void ConfigureInstitutionsContext(ModelBuilder builder)

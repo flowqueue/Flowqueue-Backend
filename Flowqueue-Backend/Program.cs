@@ -1,3 +1,8 @@
+using Flowqueue_Backend.IAM.Application.Internal.CommandServices;
+using Flowqueue_Backend.IAM.Application.Internal.QueryServices;
+using Flowqueue_Backend.IAM.Application.Services;
+using Flowqueue_Backend.IAM.Domain.Repositories;
+using Flowqueue_Backend.IAM.Infrastructure.Persistence.EFC.Repositories;
 using Flowqueue_Backend.Institutions.Application.Internal.CommandServices;
 using Flowqueue_Backend.Institutions.Application.Internal.QueryServices;
 using Flowqueue_Backend.Institutions.Application.Services;
@@ -43,6 +48,11 @@ builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
 });
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserCommandService, UserCommandService>();
+builder.Services.AddScoped<IUserQueryService, UserQueryService>();
+builder.Services.AddScoped<IAuthenticationCommandService, AuthenticationCommandService>();
 
 builder.Services.AddScoped<IInstitutionRepository, InstitutionRepository>();
 builder.Services.AddScoped<IInstitutionCommandService, InstitutionCommandService>();
