@@ -1,5 +1,7 @@
 using Flowqueue_Backend.Institutions.Domain.Model.Aggregates;
 using Flowqueue_Backend.Institutions.Domain.Model.ValueObjects;
+using Flowqueue_Backend.Queueing.Domain.Model.Aggregates;
+using Flowqueue_Backend.Queueing.Domain.Model.ValueObjects;
 using Flowqueue_Backend.shared.Infrastructure.Persistence.EFC.Configuration.Extensions;
 using Flowqueue_Backend.shared.Infrastructure.Persistence.EFC.Interceptors;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +13,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
     public DbSet<Institution> Institutions => Set<Institution>();
     public DbSet<BranchOffice> BranchOffices => Set<BranchOffice>();
     public DbSet<Service> Services => Set<Service>();
+    public DbSet<Turn> Turns => Set<Turn>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder builder)
     {
@@ -23,6 +26,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
         base.OnModelCreating(builder);
 
         ConfigureInstitutionsContext(builder);
+        ConfigureQueueingContext(builder);
         builder.UseSnakeCaseNamingConvention();
     }
 
@@ -71,6 +75,37 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
                 .WithMany()
                 .HasForeignKey(service => service.BranchOfficeId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private static void ConfigureQueueingContext(ModelBuilder builder)
+    {
+        builder.Entity<Turn>(entity =>
+        {
+            entity.HasKey(turn => turn.Id);
+            entity.Property(turn => turn.Id).ValueGeneratedOnAdd();
+            entity.Property(turn => turn.CitizenName).IsRequired().HasMaxLength(100);
+            entity.Property(turn => turn.CitizenDocumentNumber).IsRequired().HasMaxLength(20);
+            entity.Property(turn => turn.TurnNumber).IsRequired();
+            entity.Property(turn => turn.RegisteredAt).IsRequired();
+            entity.Property(turn => turn.TicketCode)
+                .HasConversion(ticketCode => ticketCode.Value, value => new TicketCode(value))
+                .IsRequired()
+                .HasMaxLength(20);
+            entity.Property(turn => turn.Status)
+                .HasConversion(status => status.Value, value => new TurnStatus(value))
+                .IsRequired()
+                .HasMaxLength(20);
+            entity.HasIndex(turn => turn.TicketCode).IsUnique();
+            entity.HasIndex(turn => new { turn.BranchOfficeId, turn.ServiceId, turn.TurnNumber }).IsUnique();
+            entity.HasOne<BranchOffice>()
+                .WithMany()
+                .HasForeignKey(turn => turn.BranchOfficeId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<Service>()
+                .WithMany()
+                .HasForeignKey(turn => turn.ServiceId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

@@ -3,6 +3,11 @@ using Flowqueue_Backend.Institutions.Application.Internal.QueryServices;
 using Flowqueue_Backend.Institutions.Application.Services;
 using Flowqueue_Backend.Institutions.Domain.Repositories;
 using Flowqueue_Backend.Institutions.Infrastructure.Persistence.EFC.Repositories;
+using Flowqueue_Backend.Queueing.Application.Internal.CommandServices;
+using Flowqueue_Backend.Queueing.Application.Internal.QueryServices;
+using Flowqueue_Backend.Queueing.Application.Services;
+using Flowqueue_Backend.Queueing.Domain.Repositories;
+using Flowqueue_Backend.Queueing.Infrastructure.Persistence.EFC.Repositories;
 using Flowqueue_Backend.shared.Domain.Repositories;
 using Flowqueue_Backend.shared.Infrastructure.Interfaces.ASP.Configuration;
 using Flowqueue_Backend.shared.Infrastructure.Persistence.EFC.Configuration;
@@ -50,6 +55,10 @@ builder.Services.AddScoped<IBranchOfficeQueryService, BranchOfficeQueryService>(
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
 builder.Services.AddScoped<IServiceCommandService, ServiceCommandService>();
 builder.Services.AddScoped<IServiceQueryService, ServiceQueryService>();
+
+builder.Services.AddScoped<ITurnRepository, TurnRepository>();
+builder.Services.AddScoped<ITurnCommandService, TurnCommandService>();
+builder.Services.AddScoped<ITurnQueryService, TurnQueryService>();
 
 var app = builder.Build();
 
