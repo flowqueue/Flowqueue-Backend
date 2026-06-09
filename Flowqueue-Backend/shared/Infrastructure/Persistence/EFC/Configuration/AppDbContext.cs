@@ -1,5 +1,7 @@
 using Flowqueue_Backend.IAM.Domain.Model.Aggregates;
 using Flowqueue_Backend.IAM.Domain.Model.ValueObjects;
+using Flowqueue_Backend.Notifications.Domain.Model.Aggregates;
+using Flowqueue_Backend.Notifications.Domain.Model.ValueObjects;
 using Flowqueue_Backend.Institutions.Domain.Model.Aggregates;
 using Flowqueue_Backend.Institutions.Domain.Model.ValueObjects;
 using Flowqueue_Backend.Queueing.Domain.Model.Aggregates;
@@ -17,6 +19,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
     public DbSet<BranchOffice> BranchOffices => Set<BranchOffice>();
     public DbSet<Service> Services => Set<Service>();
     public DbSet<Turn> Turns => Set<Turn>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder builder)
     {
@@ -31,6 +34,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
         ConfigureIamContext(builder);
         ConfigureInstitutionsContext(builder);
         ConfigureQueueingContext(builder);
+        ConfigureNotificationsContext(builder);
         builder.UseSnakeCaseNamingConvention();
     }
 
@@ -97,6 +101,38 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
                 .WithMany()
                 .HasForeignKey(service => service.BranchOfficeId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+
+    private static void ConfigureNotificationsContext(ModelBuilder builder)
+    {
+        builder.Entity<Notification>(entity =>
+        {
+            entity.HasKey(notification => notification.Id);
+            entity.Property(notification => notification.Id).ValueGeneratedOnAdd();
+            entity.Property(notification => notification.Title).IsRequired().HasMaxLength(120);
+            entity.Property(notification => notification.Message).IsRequired().HasMaxLength(300);
+            entity.Property(notification => notification.Type)
+                .HasConversion(type => type.Value, value => new NotificationType(value))
+                .IsRequired()
+                .HasMaxLength(40);
+            entity.Property(notification => notification.Status)
+                .HasConversion(status => status.Value, value => new NotificationStatus(value))
+                .IsRequired()
+                .HasMaxLength(20);
+            entity.Property(notification => notification.SentAt).IsRequired();
+            entity.HasIndex(notification => notification.UserId);
+            entity.HasIndex(notification => notification.TurnId);
+            entity.HasIndex(notification => notification.Status);
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(notification => notification.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<Turn>()
+                .WithMany()
+                .HasForeignKey(notification => notification.TurnId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 
