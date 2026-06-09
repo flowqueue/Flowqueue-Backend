@@ -8,6 +8,11 @@ using Flowqueue_Backend.Institutions.Application.Internal.QueryServices;
 using Flowqueue_Backend.Institutions.Application.Services;
 using Flowqueue_Backend.Institutions.Domain.Repositories;
 using Flowqueue_Backend.Institutions.Infrastructure.Persistence.EFC.Repositories;
+using Flowqueue_Backend.Notifications.Application.Internal.CommandServices;
+using Flowqueue_Backend.Notifications.Application.Internal.QueryServices;
+using Flowqueue_Backend.Notifications.Application.Services;
+using Flowqueue_Backend.Notifications.Domain.Repositories;
+using Flowqueue_Backend.Notifications.Infrastructure.Persistence.EFC.Repositories;
 using Flowqueue_Backend.Queueing.Application.Internal.CommandServices;
 using Flowqueue_Backend.Queueing.Application.Internal.QueryServices;
 using Flowqueue_Backend.Queueing.Application.Services;
@@ -69,6 +74,10 @@ builder.Services.AddScoped<IServiceQueryService, ServiceQueryService>();
 builder.Services.AddScoped<ITurnRepository, TurnRepository>();
 builder.Services.AddScoped<ITurnCommandService, TurnCommandService>();
 builder.Services.AddScoped<ITurnQueryService, TurnQueryService>();
+
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<INotificationCommandService, NotificationCommandService>();
+builder.Services.AddScoped<INotificationQueryService, NotificationQueryService>();
 
 var app = builder.Build();
 
