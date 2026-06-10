@@ -1,3 +1,7 @@
+using Flowqueue_Backend.Analytics.Application.Internal.QueryServices;
+using Flowqueue_Backend.Analytics.Application.Services;
+using Flowqueue_Backend.Analytics.Domain.Repositories;
+using Flowqueue_Backend.Analytics.Infrastructure.Persistence.EFC.Repositories;
 using Flowqueue_Backend.IAM.Application.Internal.CommandServices;
 using Flowqueue_Backend.IAM.Application.Internal.QueryServices;
 using Flowqueue_Backend.IAM.Application.Services;
@@ -78,6 +82,9 @@ builder.Services.AddScoped<ITurnQueryService, TurnQueryService>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationCommandService, NotificationCommandService>();
 builder.Services.AddScoped<INotificationQueryService, NotificationQueryService>();
+
+builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
+builder.Services.AddScoped<IAnalyticsQueryService, AnalyticsQueryService>();
 
 var app = builder.Build();
 
