@@ -31,6 +31,21 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// --- NUEVO: 1. Configurar el servicio CORS ---
+var misReglasCors = "ReglasCorsVercel";
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: misReglasCors,
+                      policy =>
+                      {
+                          policy.WithOrigins("https://flowqueue.vercel.app")
+                                .AllowAnyHeader()
+                                .AllowAnyMethod();
+                      });
+});
+// ---------------------------------------------
+
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddLocalization();
 builder.Services.AddControllers(options => options.Conventions.Add(new KebabCaseRouteNamingConvention()))
@@ -108,6 +123,12 @@ localizationOptions.ApplyCurrentCultureToResponseHeaders = true;
 
 app.UseRequestLocalization(localizationOptions);
 app.UseHttpsRedirection();
+
+// --- NUEVO: 2. Aplicar el Middleware de Ruteo y CORS en el orden correcto ---
+app.UseRouting();
+app.UseCors(misReglasCors);
+// ----------------------------------------------------------------------------
+
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
