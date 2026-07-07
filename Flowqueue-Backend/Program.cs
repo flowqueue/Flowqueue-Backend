@@ -47,7 +47,7 @@ builder.Services.AddCors(options =>
                       policy =>
                       {
                           
-                          policy.WithOrigins("https://flowqueue.vercel.app", "http://localhost:5173", "http://127.0.0.1:5173")
+                          policy.WithOrigins("https://flowqueue.vercel.app", "https://flowqueue-pink.vercel.app", "http://localhost:5173", "http://127.0.0.1:5173")
                                 .AllowAnyHeader()
                                 .AllowAnyMethod();
                       });
