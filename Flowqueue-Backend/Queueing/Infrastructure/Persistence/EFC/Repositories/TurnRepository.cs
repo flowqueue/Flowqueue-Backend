@@ -1,4 +1,5 @@
 using Flowqueue_Backend.Queueing.Domain.Model.Aggregates;
+using Flowqueue_Backend.Queueing.Domain.Model.ValueObjects;
 using Flowqueue_Backend.Queueing.Domain.Repositories;
 using Flowqueue_Backend.shared.Infrastructure.Persistence.EFC.Configuration;
 using Flowqueue_Backend.shared.Infrastructure.Persistence.EFC.Repositories;
@@ -24,8 +25,17 @@ public class TurnRepository(AppDbContext context) : BaseRepository<Turn>(context
 
         if (!string.IsNullOrWhiteSpace(status))
         {
-            var normalizedStatus = status.Trim().ToLowerInvariant();
-            query = query.Where(turn => turn.Status.Value == normalizedStatus);
+            TurnStatus normalizedStatus;
+            try
+            {
+                normalizedStatus = new TurnStatus(status);
+            }
+            catch (ArgumentException)
+            {
+                return [];
+            }
+
+            query = query.Where(turn => turn.Status == normalizedStatus);
         }
 
         return await query

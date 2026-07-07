@@ -7,5 +7,6 @@ public interface IUserRepository : IBaseRepository<User>
 {
     Task AddAsync(User user, CancellationToken cancellationToken = default);
     Task<User?> FindByEmailAsync(string email, CancellationToken cancellationToken = default);
+    Task<User?> FindByDocumentNumberAsync(string documentNumber, CancellationToken cancellationToken = default);
     Task<IEnumerable<User>> FindByFiltersAsync(string? role, CancellationToken cancellationToken = default);
 }

@@ -20,6 +20,15 @@ public class UserRepository(AppDbContext context) : BaseRepository<User>(context
             .FirstOrDefaultAsync(user => user.Email == normalizedEmail, cancellationToken);
     }
 
+    public async Task<User?> FindByDocumentNumberAsync(
+        string documentNumber,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedDocument = documentNumber.Trim();
+        return await Context.Set<User>()
+            .FirstOrDefaultAsync(user => user.DocumentNumber == normalizedDocument, cancellationToken);
+    }
+
     public async Task<IEnumerable<User>> FindByFiltersAsync(
         string? role,
         CancellationToken cancellationToken = default)

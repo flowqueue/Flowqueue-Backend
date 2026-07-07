@@ -1,4 +1,9 @@
+using Flowqueue_Backend.IAM.Domain.Repositories;
 using Flowqueue_Backend.Institutions.Domain.Repositories;
+using Flowqueue_Backend.Notifications.Domain.Model.Aggregates;
+using Flowqueue_Backend.Notifications.Domain.Model.Commands;
+using Flowqueue_Backend.Notifications.Domain.Model.ValueObjects;
+using Flowqueue_Backend.Notifications.Domain.Repositories;
 using Flowqueue_Backend.Queueing.Application.Errors;
 using Flowqueue_Backend.Queueing.Application.Services;
 using Flowqueue_Backend.Queueing.Domain.Model.Aggregates;
@@ -15,6 +20,8 @@ public class TurnCommandService(
     ITurnRepository turnRepository,
     IBranchOfficeRepository branchOfficeRepository,
     IServiceRepository serviceRepository,
+    IUserRepository userRepository,
+    INotificationRepository notificationRepository,
     IUnitOfWork unitOfWork,
     ILogger<TurnCommandService> logger) : ITurnCommandService
 {
@@ -59,27 +66,68 @@ public class TurnCommandService(
     public async Task<Result<Turn, UpdateTurnError>> Handle(
         CallTurnCommand command,
         CancellationToken cancellationToken = default) =>
-        await UpdateTurnStatus(command.TurnId, turn => turn.Call(), "call", cancellationToken);
+        await UpdateTurnStatus(
+            command.TurnId,
+            turn => turn.Call(),
+            "call",
+            turn => new CreateNotificationCommand(
+                0,
+                turn.Id,
+                "¡Es tu turno!",
+                $"Tu turno {turn.TicketCode.Value} está siendo llamado. Acércate a la ventanilla.",
+                NotificationType.NewTurnCalled()),
+            cancellationToken);
 
     public async Task<Result<Turn, UpdateTurnError>> Handle(
         CompleteTurnCommand command,
         CancellationToken cancellationToken = default) =>
-        await UpdateTurnStatus(command.TurnId, turn => turn.Complete(), "complete", cancellationToken);
+        await UpdateTurnStatus(
+            command.TurnId,
+            turn => turn.Complete(),
+            "complete",
+            turn => new CreateNotificationCommand(
+                0,
+                turn.Id,
+                "Atención completada",
+                $"Tu turno {turn.TicketCode.Value} fue atendido correctamente. ¡Gracias por tu visita!",
+                NotificationType.NewTurnCompleted()),
+            cancellationToken);
 
     public async Task<Result<Turn, UpdateTurnError>> Handle(
         CancelTurnCommand command,
         CancellationToken cancellationToken = default) =>
-        await UpdateTurnStatus(command.TurnId, turn => turn.Cancel(), "cancel", cancellationToken);
+        await UpdateTurnStatus(
+            command.TurnId,
+            turn => turn.Cancel(),
+            "cancel",
+            turn => new CreateNotificationCommand(
+                0,
+                turn.Id,
+                "Turno cancelado",
+                $"Tu turno {turn.TicketCode.Value} fue cancelado.",
+                NotificationType.NewTurnCancelled()),
+            cancellationToken);
 
     public async Task<Result<Turn, UpdateTurnError>> Handle(
         MarkTurnAsAbsentCommand command,
         CancellationToken cancellationToken = default) =>
-        await UpdateTurnStatus(command.TurnId, turn => turn.MarkAsAbsent(), "mark as absent", cancellationToken);
+        await UpdateTurnStatus(
+            command.TurnId,
+            turn => turn.MarkAsAbsent(),
+            "mark as absent",
+            turn => new CreateNotificationCommand(
+                0,
+                turn.Id,
+                "Turno marcado como ausente",
+                $"No respondiste al llamado del turno {turn.TicketCode.Value}. Genera un nuevo ticket si aún necesitas atención.",
+                NotificationType.NewGeneral()),
+            cancellationToken);
 
     private async Task<Result<Turn, UpdateTurnError>> UpdateTurnStatus(
         int turnId,
         Action<Turn> updateAction,
         string operationName,
+        Func<Turn, CreateNotificationCommand> notificationFactory,
         CancellationToken cancellationToken)
     {
         var turn = await turnRepository.FindByIdAsync(turnId, cancellationToken);
@@ -90,6 +138,7 @@ public class TurnCommandService(
         {
             updateAction(turn);
             turnRepository.Update(turn);
+            await AddCitizenNotificationAsync(turn, notificationFactory, cancellationToken);
             await unitOfWork.CompleteAsync(cancellationToken);
             return new Result<Turn, UpdateTurnError>.Success(turn);
         }
@@ -107,6 +156,25 @@ public class TurnCommandService(
         {
             logger.LogError(ex, "Unexpected error while trying to {OperationName} turn {TurnId}", operationName, turnId);
             return new Result<Turn, UpdateTurnError>.Failure(UpdateTurnError.UnexpectedError);
+        }
+    }
+
+    private async Task AddCitizenNotificationAsync(
+        Turn turn,
+        Func<Turn, CreateNotificationCommand> notificationFactory,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var citizen = await userRepository.FindByDocumentNumberAsync(turn.CitizenDocumentNumber, cancellationToken);
+            if (citizen is null) return;
+
+            var command = notificationFactory(turn) with { UserId = citizen.Id };
+            await notificationRepository.AddAsync(new Notification(command), cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Could not queue notification for turn {TurnId}", turn.Id);
         }
     }
 }

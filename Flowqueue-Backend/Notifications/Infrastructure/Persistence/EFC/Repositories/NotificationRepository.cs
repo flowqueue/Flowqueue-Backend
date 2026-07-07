@@ -1,4 +1,5 @@
 using Flowqueue_Backend.Notifications.Domain.Model.Aggregates;
+using Flowqueue_Backend.Notifications.Domain.Model.ValueObjects;
 using Flowqueue_Backend.Notifications.Domain.Repositories;
 using Flowqueue_Backend.shared.Infrastructure.Persistence.EFC.Configuration;
 using Flowqueue_Backend.shared.Infrastructure.Persistence.EFC.Repositories;
@@ -24,14 +25,32 @@ public class NotificationRepository(AppDbContext context) : BaseRepository<Notif
 
         if (!string.IsNullOrWhiteSpace(status))
         {
-            var normalizedStatus = status.Trim().ToLowerInvariant();
-            query = query.Where(notification => notification.Status.Value == normalizedStatus);
+            NotificationStatus normalizedStatus;
+            try
+            {
+                normalizedStatus = new NotificationStatus(status);
+            }
+            catch (ArgumentException)
+            {
+                return [];
+            }
+
+            query = query.Where(notification => notification.Status == normalizedStatus);
         }
 
         if (!string.IsNullOrWhiteSpace(type))
         {
-            var normalizedType = type.Trim().ToLowerInvariant();
-            query = query.Where(notification => notification.Type.Value == normalizedType);
+            NotificationType normalizedType;
+            try
+            {
+                normalizedType = new NotificationType(type);
+            }
+            catch (ArgumentException)
+            {
+                return [];
+            }
+
+            query = query.Where(notification => notification.Type == normalizedType);
         }
 
         return await query
