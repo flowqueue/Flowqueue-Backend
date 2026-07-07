@@ -36,6 +36,11 @@ public partial class User : IAuditableEntity
 
     public bool HasPasswordHash(string passwordHash) => PasswordHash == passwordHash;
 
+    public void ChangePasswordHash(string passwordHash)
+    {
+        PasswordHash = NormalizeRequiredText(passwordHash, nameof(passwordHash));
+    }
+
     public static string NormalizeEmail(string value)
     {
         if (string.IsNullOrWhiteSpace(value))

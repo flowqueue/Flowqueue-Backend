@@ -7,6 +7,8 @@ using Flowqueue_Backend.IAM.Application.Internal.QueryServices;
 using Flowqueue_Backend.IAM.Application.Services;
 using Flowqueue_Backend.IAM.Domain.Repositories;
 using Flowqueue_Backend.IAM.Infrastructure.Persistence.EFC.Repositories;
+using Flowqueue_Backend.IAM.Infrastructure.Persistence.EFC.Seeds;
+using Flowqueue_Backend.IAM.Infrastructure.Tokens;
 using Flowqueue_Backend.Institutions.Application.Internal.CommandServices;
 using Flowqueue_Backend.Institutions.Application.Internal.QueryServices;
 using Flowqueue_Backend.Institutions.Application.Services;
@@ -27,7 +29,12 @@ using Flowqueue_Backend.shared.Infrastructure.Interfaces.ASP.Configuration;
 using Flowqueue_Backend.shared.Infrastructure.Persistence.EFC.Configuration;
 using Flowqueue_Backend.shared.Infrastructure.Persistence.EFC.Repositories;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,7 +47,7 @@ builder.Services.AddCors(options =>
                       policy =>
                       {
                           
-                          policy.WithOrigins("https://flowqueue.vercel.app", "http://localhost:5173")
+                          policy.WithOrigins("https://flowqueue.vercel.app", "http://localhost:5173", "http://127.0.0.1:5173")
                                 .AllowAnyHeader()
                                 .AllowAnyMethod();
                       });
@@ -53,8 +60,51 @@ builder.Services.AddControllers(options => options.Conventions.Add(new KebabCase
     .AddDataAnnotationsLocalization();
 builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options => options.EnableAnnotations());
-builder.Services.AddAuthorization();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.EnableAnnotations();
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Description = "Ingresa el token JWT con el formato: Bearer {token}",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("Bearer", document, null)] = new List<string>()
+    });
+    options.OperationFilter<AuthorizeOperationFilter>();
+});
+
+var jwtSecret = builder.Configuration["Jwt:Secret"];
+if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32)
+    throw new InvalidOperationException("JWT secret must be configured and be at least 32 characters long.");
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "Flowqueue-Backend",
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "FlowQueue",
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(2)
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
 
 builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
 {
@@ -78,6 +128,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserCommandService, UserCommandService>();
 builder.Services.AddScoped<IUserQueryService, UserQueryService>();
 builder.Services.AddScoped<IAuthenticationCommandService, AuthenticationCommandService>();
+builder.Services.AddScoped<ITokenService, JwtTokenService>();
 
 builder.Services.AddScoped<IInstitutionRepository, InstitutionRepository>();
 builder.Services.AddScoped<IInstitutionCommandService, InstitutionCommandService>();
@@ -108,6 +159,11 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     context.Database.Migrate();
+    await AdminBootstrapper.SeedAsync(
+        context,
+        app.Configuration,
+        app.Environment,
+        app.Logger);
 }
 
 app.UseExceptionHandler();
@@ -130,6 +186,7 @@ app.UseRouting();
 app.UseCors(misReglasCors);
 // ----------------------------------------------------------------------------
 
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();

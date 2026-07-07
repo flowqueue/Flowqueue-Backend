@@ -10,4 +10,12 @@ public interface IUserCommandService
     Task<Result<User, CreateUserError>> Handle(
         CreateUserCommand command,
         CancellationToken cancellationToken = default);
+
+    Task<Result<User, UpdateUserError>> Handle(
+        UpdateUserPasswordCommand command,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<User, DeleteUserError>> Handle(
+        DeleteUserCommand command,
+        CancellationToken cancellationToken = default);
 }

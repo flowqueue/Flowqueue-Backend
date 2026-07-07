@@ -1,4 +1,5 @@
 using Flowqueue_Backend.IAM.Domain.Model.Aggregates;
+using Flowqueue_Backend.IAM.Domain.Model.ValueObjects;
 using Flowqueue_Backend.IAM.Domain.Repositories;
 using Flowqueue_Backend.shared.Infrastructure.Persistence.EFC.Configuration;
 using Flowqueue_Backend.shared.Infrastructure.Persistence.EFC.Repositories;
@@ -27,8 +28,17 @@ public class UserRepository(AppDbContext context) : BaseRepository<User>(context
 
         if (!string.IsNullOrWhiteSpace(role))
         {
-            var normalizedRole = role.Trim().ToLowerInvariant();
-            query = query.Where(user => user.Role.Value == normalizedRole);
+            UserRole normalizedRole;
+            try
+            {
+                normalizedRole = new UserRole(role);
+            }
+            catch (ArgumentException)
+            {
+                return [];
+            }
+
+            query = query.Where(user => user.Role == normalizedRole);
         }
 
         return await query

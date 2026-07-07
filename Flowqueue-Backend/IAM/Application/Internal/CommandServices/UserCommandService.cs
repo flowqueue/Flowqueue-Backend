@@ -51,4 +51,65 @@ public class UserCommandService(
             return new Result<User, CreateUserError>.Failure(CreateUserError.UnexpectedError);
         }
     }
+
+    public async Task<Result<User, UpdateUserError>> Handle(
+        UpdateUserPasswordCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await userRepository.FindByIdAsync(command.UserId, cancellationToken);
+        if (user is null)
+            return new Result<User, UpdateUserError>.Failure(UpdateUserError.UserNotFound);
+
+        try
+        {
+            if (!user.HasPasswordHash(PasswordHashingService.Hash(command.CurrentPassword)))
+                return new Result<User, UpdateUserError>.Failure(UpdateUserError.InvalidCurrentPassword);
+
+            user.ChangePasswordHash(PasswordHashingService.Hash(command.NewPassword));
+            userRepository.Update(user);
+            await unitOfWork.CompleteAsync(cancellationToken);
+            return new Result<User, UpdateUserError>.Success(user);
+        }
+        catch (ArgumentException ex)
+        {
+            logger.LogWarning(ex, "Invalid password update request for user {UserId}", command.UserId);
+            return new Result<User, UpdateUserError>.Failure(UpdateUserError.InvalidUserData);
+        }
+        catch (DbUpdateException ex)
+        {
+            logger.LogWarning(ex, "Could not update password for user {UserId}", command.UserId);
+            return new Result<User, UpdateUserError>.Failure(UpdateUserError.UnexpectedError);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error updating password for user {UserId}", command.UserId);
+            return new Result<User, UpdateUserError>.Failure(UpdateUserError.UnexpectedError);
+        }
+    }
+
+    public async Task<Result<User, DeleteUserError>> Handle(
+        DeleteUserCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await userRepository.FindByIdAsync(command.UserId, cancellationToken);
+        if (user is null)
+            return new Result<User, DeleteUserError>.Failure(DeleteUserError.UserNotFound);
+
+        try
+        {
+            userRepository.Remove(user);
+            await unitOfWork.CompleteAsync(cancellationToken);
+            return new Result<User, DeleteUserError>.Success(user);
+        }
+        catch (DbUpdateException ex)
+        {
+            logger.LogWarning(ex, "Could not delete user {UserId}", command.UserId);
+            return new Result<User, DeleteUserError>.Failure(DeleteUserError.UnexpectedError);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error deleting user {UserId}", command.UserId);
+            return new Result<User, DeleteUserError>.Failure(DeleteUserError.UnexpectedError);
+        }
+    }
 }

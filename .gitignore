@@ -3,3 +3,5 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
+# Local secrets (connection strings, JWT, bootstrap admin)
+**/appsettings.Development.json
