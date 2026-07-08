@@ -12,4 +12,5 @@ public interface ITurnCommandService
     Task<Result<Turn, UpdateTurnError>> Handle(CompleteTurnCommand command, CancellationToken cancellationToken = default);
     Task<Result<Turn, UpdateTurnError>> Handle(CancelTurnCommand command, CancellationToken cancellationToken = default);
     Task<Result<Turn, UpdateTurnError>> Handle(MarkTurnAsAbsentCommand command, CancellationToken cancellationToken = default);
+    Task<Result<Turn, UpdateTurnError>> Handle(DeleteTurnCommand command, CancellationToken cancellationToken = default);
 }

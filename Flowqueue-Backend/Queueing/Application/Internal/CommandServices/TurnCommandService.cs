@@ -123,6 +123,27 @@ public class TurnCommandService(
                 NotificationType.NewGeneral()),
             cancellationToken);
 
+    public async Task<Result<Turn, UpdateTurnError>> Handle(
+        DeleteTurnCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        var turn = await turnRepository.FindByIdAsync(command.TurnId, cancellationToken);
+        if (turn is null)
+            return new Result<Turn, UpdateTurnError>.Failure(UpdateTurnError.TurnNotFound);
+
+        try
+        {
+            turnRepository.Remove(turn);
+            await unitOfWork.CompleteAsync(cancellationToken);
+            return new Result<Turn, UpdateTurnError>.Success(turn);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error deleting turn {TurnId}", command.TurnId);
+            return new Result<Turn, UpdateTurnError>.Failure(UpdateTurnError.UnexpectedError);
+        }
+    }
+
     private async Task<Result<Turn, UpdateTurnError>> UpdateTurnStatus(
         int turnId,
         Action<Turn> updateAction,

@@ -1,9 +1,12 @@
 using System.Net.Mime;
+using Flowqueue_Backend.Queueing.Application.Errors;
 using Flowqueue_Backend.Queueing.Application.Services;
+using Flowqueue_Backend.Queueing.Domain.Model.Aggregates;
 using Flowqueue_Backend.Queueing.Domain.Model.Commands;
 using Flowqueue_Backend.Queueing.Domain.Model.Queries;
 using Flowqueue_Backend.Queueing.Interfaces.REST.Resources;
 using Flowqueue_Backend.Queueing.Interfaces.REST.Transform;
+using Flowqueue_Backend.shared.Application.Patterns;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -119,5 +122,24 @@ public class TurnsController(
     {
         var result = await turnCommandService.Handle(new MarkTurnAsAbsentCommand(id), cancellationToken);
         return ActionResultFromUpdateTurnResultAssembler.ToActionResultFromUpdateTurnResult(result, this);
+    }
+
+    [HttpDelete("{id}")]
+    [SwaggerOperation(Summary = "Deletes a turn", OperationId = "DeleteTurn")]
+    [SwaggerResponse(204, "No Content")]
+    [SwaggerResponse(404, "Not Found", typeof(string))]
+    public async Task<ActionResult> DeleteTurn(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await turnCommandService.Handle(new DeleteTurnCommand(id), cancellationToken);
+
+        return result switch
+        {
+            Result<Turn, UpdateTurnError>.Success => NoContent(),
+            Result<Turn, UpdateTurnError>.Failure { Error: UpdateTurnError.TurnNotFound } =>
+                NotFound("Turn was not found."),
+            _ => StatusCode(StatusCodes.Status500InternalServerError, "Turn could not be deleted.")
+        };
     }
 }
