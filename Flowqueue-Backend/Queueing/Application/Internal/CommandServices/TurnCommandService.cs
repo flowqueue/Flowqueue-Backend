@@ -44,7 +44,7 @@ public class TurnCommandService(
         {
             var lastTurnNumber = await turnRepository.GetLastTurnNumberByServiceIdAsync(command.ServiceId, cancellationToken);
             var nextTurnNumber = lastTurnNumber + 1;
-            var ticketCode = new TicketCode($"{service.Prefix.Value}-{nextTurnNumber:000}");
+            var ticketCode = new TicketCode($"{service.Prefix.Value}{command.ServiceId:00}-{nextTurnNumber:000}");
             var turn = new Turn(command, nextTurnNumber, ticketCode);
 
             await turnRepository.AddAsync(turn, cancellationToken);

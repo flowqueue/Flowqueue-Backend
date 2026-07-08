@@ -8,7 +8,7 @@ namespace Flowqueue_Backend.Institutions.Infrastructure.Persistence.EFC.Reposito
 
 public class BranchOfficeRepository(AppDbContext context) : BaseRepository<BranchOffice>(context), IBranchOfficeRepository
 {
-    public async Task AddAsync(BranchOffice branchOffice, CancellationToken cancellationToken = default) =>
+    public new async Task AddAsync(BranchOffice branchOffice, CancellationToken cancellationToken = default) =>
         await Context.Set<BranchOffice>().AddAsync(branchOffice, cancellationToken);
 
     public async Task<IEnumerable<BranchOffice>> FindByInstitutionIdAsync(

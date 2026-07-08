@@ -9,7 +9,7 @@ namespace Flowqueue_Backend.Institutions.Infrastructure.Persistence.EFC.Reposito
 
 public class InstitutionRepository(AppDbContext context) : BaseRepository<Institution>(context), IInstitutionRepository
 {
-    public async Task AddAsync(Institution institution, CancellationToken cancellationToken = default) =>
+    public new async Task AddAsync(Institution institution, CancellationToken cancellationToken = default) =>
         await Context.Set<Institution>().AddAsync(institution, cancellationToken);
 
     public async Task<Institution?> FindByNameAsync(string name, CancellationToken cancellationToken = default) =>
